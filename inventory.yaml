@@ -1,0 +1,259 @@
+[OSEv3:children]
+masters
+nodes
+etcd
+lb
+nfs
+
+[all:children]
+OSEv3
+lb
+
+[OSEv3:vars]
+##########################################
+## General cluster characteristics
+##########################################
+# SSH user, this user should allow ssh based auth without requiring a password
+ansible_ssh_user=silvinux
+
+# If ansible_ssh_user is not root, ansible_become must be set to true
+ansible_become=true
+
+# Debug level for all OpenShift components (Defaults to 2)
+debug_level=2
+
+openshift_deployment_type=openshift-enterprise
+#oreg_url=lab.example.com/openshift3/ose-${component}:${version}
+#openshift_examples_modify_imagestreams=true
+
+openshift_deployment_type=openshift-enterprise
+openshift_release=v3.9
+#openshift_pkg_version=-3.11.104
+#openshift_image_tag=v3.11.104
+openshift_disable_check=disk_availability,docker_storage,memory_availability,package_version
+
+oreg_auth_user=''
+oreg_auth_password=''
+
+
+##########################################
+## Cluster Authentication Variables
+##########################################
+openshift_master_identity_providers=[{'name': 'htpasswd_auth', 'login': 'true', 'challenge': 'true', 'kind': 'HTPasswdPasswordIdentityProvider'}]
+openshift_master_htpasswd_users={'admin':'$apr1$p56igIQy$P4X3f0pWUg3R79ipUyCZw.', 'developer': '$apr1$xIvLz.UM$XWOpa2S/lNAr7hq2NkvoV/'}
+
+## LADP provider
+#openshift_master_identity_providers=[{'name': 'ldap', 'challenge': 'true', 'login': 'true', 'kind': 'LDAPPasswordIdentityProvider','attributes': {'id': ['dn'], 'email': ['mail'], 'name': ['cn'], 'preferredUsername': ['uid']}, 'bindDN': 'uid=binder,cn=users,cn=accounts,dc=tanami,dc=io', 'bindPassword': 'p4sswd', 'ca': '/etc/origin/master/ipa-ca.crt','insecure': 'false', 'url': 'ldaps://idm.lab.example.com/cn=users,cn=accounts,dc=lab,dc=example,dc=com?uid'}]
+#openshift_master_ldap_ca_file=/root/prereq-ocp/cipa.crt
+
+##########################################
+## OpenShift Networking Variables
+##########################################
+#os_firewall_use_firewalld=true
+openshift_master_cluster_method=native
+openshift_master_api_port=443
+openshift_master_console_port=443
+openshift_master_default_subdomain=apps.lab.example.com
+openshift_master_cluster_public_hostname=ocp-external.lab.example.com
+openshift_master_cluster_hostname=ocp-internal.lab.example.com
+
+##########################################
+## Data persistence
+##########################################
+## NFS is an unsupported configuration
+########################
+openshift_enable_unsupported_configurations=true
+########################
+# Registry
+########################
+# Option A - NFS Host Group
+# # An NFS volume will be created with path "nfs_directory/volume_name"
+# # on the host within the [nfs] host group.  For example, the volume
+# # path using these options would be "/exports/metrics"
+########################
+openshift_hosted_registry_storage_kind=nfs
+openshift_hosted_registry_storage_access_modes=['ReadWriteMany']
+openshift_hosted_registry_storage_nfs_directory=/var/nfsshare
+openshift_hosted_registry_storage_volume_name=registry
+openshift_hosted_registry_storage_volume_size=10Gi
+
+########################
+###OAB's etcd configuration variables
+#########################
+openshift_hosted_etcd_storage_kind=nfs
+openshift_hosted_etcd_storage_nfs_directory=/var/nfsshare
+openshift_hosted_etcd_storage_volume_name=etcd-vol2
+openshift_hosted_etcd_storage_access_modes=["ReadWriteOnce"]
+openshift_hosted_etcd_storage_volume_size=1G
+openshift_hosted_etcd_storage_labels={'storage': 'etcd'}
+
+########################
+# Option B - External NFS Host
+# NFS volume must already exist with path "nfs_directory/_volume_name" on
+# the storage_host. For example, the remote volume path using these
+# options would be "nfs.example.com:/exports/metrics"
+########################
+#openshift_hosted_registry_storage_kind=nfs
+#openshift_hosted_registry_storage_access_modes=['ReadWriteMany']
+#openshift_hosted_registry_storage_host=nfs.lab.example.com
+#openshift_hosted_registry_storage_nfs_directory=/var/nfsshare
+#openshift_hosted_registry_storage_volume_name=registry
+#openshift_hosted_registry_storage_volume_size=10Gi
+
+########################
+##OAB's etcd configuration variables
+########################
+#openshift_hosted_etcd_storage_kind=nfs
+#openshift_hosted_etcd_storage_nfs_directory=/var/nfsshare
+#openshift_hosted_etcd_storage_host=nfs.lab.example.com
+#openshift_hosted_etcd_storage_volume_name=etcd-vol2
+#openshift_hosted_etcd_storage_access_modes=["ReadWriteOnce"]
+#openshift_hosted_etcd_storage_volume_size=1G
+#openshift_hosted_etcd_storage_labels={'storage': 'etcd'}
+
+########################
+## Metrics system
+########################
+# Option A - NFS Host Group
+# # An NFS volume will be created with path "nfs_directory/volume_name"
+# # on the host within the [nfs] host group.  For example, the volume
+# # path using these options would be "/exports/metrics"
+########################
+openshift_metrics_install_metrics=true
+openshift_metrics_storage_kind=nfs
+openshift_metrics_storage_access_modes=['ReadWriteOnce']
+openshift_metrics_storage_nfs_directory=/var/nfsshare
+openshift_metrics_storage_volume_name=metrics
+openshift_metrics_storage_volume_size=2Gi
+openshift_metrics_heapster_requests_memory=300M
+openshift_metrics_hawkular_requests_memory=750M
+openshift_metrics_cassandra_requests_memory=750M
+openshift_metrics_duration=2
+
+########################
+# Option B - External NFS Host
+# NFS volume must already exist with path "nfs_directory/_volume_name" on
+# the storage_host. For example, the remote volume path using these
+# options would be "nfs.example.com:/exports/metrics"
+########################
+#openshift_metrics_install_metrics=true
+#openshift_metrics_storage_kind=nfs
+#openshift_metrics_storage_access_modes=['ReadWriteOnce']
+#openshift_metrics_storage_nfs_directory=/var/nfsshare
+#openshift_metrics_storage_host=nfs.lab.example.com
+#openshift_metrics_storage_volume_name=metrics
+#openshift_metrics_storage_volume_size=2Gi
+#openshift_metrics_heapster_requests_memory=300M
+#openshift_metrics_hawkular_requests_memory=750M
+#openshift_metrics_cassandra_requests_memory=750M
+#openshift_metrics_duration=2
+
+
+########################
+## Logging system
+########################
+# Option A - NFS Host Group
+# # An NFS volume will be created with path "nfs_directory/volume_name"
+# # on the host within the [nfs] host group.  For example, the volume
+# # path using these options would be "/exports/metrics"
+########################
+openshift_logging_install_logging=True
+openshift_logging_install_eventrouter=True
+openshift_logging_es_cluster_size=1
+openshift_logging_curator_default_days=1
+
+openshift_metrics_storage_kind=nfs
+openshift_metrics_storage_access_modes=['ReadWriteOnce']
+openshift_metrics_storage_nfs_directory=/var/nfsshare
+openshift_metrics_storage_nfs_options='*(rw,root_squash)'
+openshift_metrics_storage_volume_name=metrics
+openshift_metrics_storage_volume_size=1Gi
+openshift_metrics_storage_labels={'storage': 'metrics'}
+openshift_metrics_cassandra_pvc_storage_class_name=''
+
+openshift_logging_eventrouter_memory_limit=96Mi
+openshift_logging_kibana_memory_limit=250Mi
+openshift_logging_es_memory_limit=500Mi
+openshift_logging_fluentd_memory_limit=750Mi
+
+openshift_logging_kibana_nodeselector={"node-role.kubernetes.io/infra": "true"}
+openshift_logging_curator_nodeselector={"node-role.kubernetes.io/infra": "true"}
+openshift_logging_es_nodeselector={"node-role.kubernetes.io/infra": "true"}
+openshift_logging_eventrouter_nodeselector={"node-role.kubernetes.io/infra": "true"}
+
+
+########################
+# Option B - External NFS Host
+# NFS volume must already exist with path "nfs_directory/_volume_name" on
+# the storage_host. For example, the remote volume path using these
+# options would be "nfs.example.com:/exports/metrics"
+########################
+#openshift_logging_install_logging=True
+#openshift_logging_install_eventrouter=True
+#openshift_logging_es_cluster_size=1
+#openshift_logging_curator_default_days=1
+#
+#openshift_metrics_storage_kind=nfs
+#openshift_metrics_storage_access_modes=['ReadWriteOnce']
+#openshift_metrics_storage_nfs_directory=/var/nfsshare
+#openshift_metrics_storage_nfs_server=nfs.lab.example.com
+#openshift_metrics_storage_nfs_options='*(rw,root_squash)'
+#openshift_metrics_storage_volume_name=metrics
+#openshift_metrics_storage_volume_size=1Gi
+#openshift_metrics_storage_labels={'storage': 'metrics'}
+#openshift_metrics_cassandra_pvc_storage_class_name=''
+#
+#openshift_logging_eventrouter_memory_limit=96Mi
+#openshift_logging_kibana_memory_limit=250Mi
+#openshift_logging_es_memory_limit=500Mi
+#openshift_logging_fluentd_memory_limit=750Mi
+#
+#openshift_logging_kibana_nodeselector={"node-role.kubernetes.io/infra": "true"}
+#openshift_logging_curator_nodeselector={"node-role.kubernetes.io/infra": "true"}
+#openshift_logging_es_nodeselector={"node-role.kubernetes.io/infra": "true"}
+#openshift_logging_eventrouter_nodeselector={"node-role.kubernetes.io/infra": "true"}
+
+##############################
+## Disconnected Installation
+##############################
+#oreg_url=/openshift3/ose-${component}:${version}
+#modify_imagestreams_var=true
+#openshift_docker_additional_registries=
+#openshift_docker_blocked_registries=
+#
+## Image Prefixes
+#openshift_web_console_prefix=registry.lab.example.com/openshift3/ose-
+#openshift_cockpit_deployer_prefix='registry.lab.example.com/openshift3/'
+#openshift_service_catalog_image_prefix=registry.lab.example.com/openshift3/ose-
+#template_service_broker_prefix=registry.lab.example.com/openshift3/ose-
+#ansible_service_broker_image_prefix=registry.lab.example.com/openshift3/ose-
+#ansible_service_broker_etcd_image_prefix=registry.lab.example.com/rhel7/
+#
+openshift_enable_service_catalog=false
+
+# host group for masters
+[masters]
+master1.lab.example.com
+#master2.lab.example.com
+#master3.lab.example.com
+
+# host group for etcd
+[etcd]
+master1.lab.example.com
+#master2.lab.example.com
+#master3.lab.example.com
+
+# host group for nodes, includes region info
+[nodes]
+master1.lab.example.com  openshift_ip=192.168.122.20  openshift_node_group_name="node-config-master"  
+#master2.lab.example.com  openshift_ip=192.168.122.21  openshift_node_group_name="node-config-master"  
+#master3.lab.example.com  openshift_ip=192.168.122.22  openshift_node_group_name="node-config-master"  
+infra1.lab.example.com   openshift_ip=192.168.122.23  openshift_node_group_name="node-config-infra" 
+#infra2.lab.example.com   openshift_ip=192.168.122.24  openshift_node_group_name="node-config-infra" 
+node1.lab.example.com   openshift_ip=192.168.122.25  openshift_node_group_name="node-config-compute" 
+
+[lb]
+lb.lab.example.com #10.74.177.174
+
+[nfs]
+nfs-lb.lab.example.com #ansible_host=192.168.122.13

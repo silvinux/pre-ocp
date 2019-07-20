@@ -1,0 +1,55 @@
+---
+- hosts: nodes
+  become: yes
+  pre_tasks:
+  - name: Set authorized key taken from file
+    authorized_key:
+      user: silvinux
+      state: present
+      key: "{{ lookup('file', '~/.ssh/id_lb.rsa') }}"
+  roles:
+    - role: rhn-subscription
+      sys_update: false
+      register_rhn: false
+      rhn_user: "{{ vault_rhn_user }}"
+      rhn_pwd: "{{ vault_rhn_pwd }}"
+      rhn_pool_name: "{{ vault_rhn_pool_id }}"
+      OCP_VERSION: 3.11
+      ANSIBLE_VERSION: 2.6
+      rhel_repos:
+        - rhel-7-server-rpms
+        - rhel-7-server-extras-rpms
+        - rhel-7-fast-datapath-rpms
+        - rhel-server-rhscl-7-rpms
+        - rhel-7-server-optional-rpms
+        - rhel-7-server-supplementary-rpms
+        - "rhel-7-server-ose-{{ OCP_VERSION }}-rpms"
+        - "rhel-7-server-ansible-{{ ANSIBLE_VERSION }}-rpms"
+      packages_uninstall:
+        - cloud-init
+      packages_install:
+        - vim
+        - vim-enhanced
+        - nmap
+        - net-tools
+        - ansible
+        - git
+        - bind-utils
+        - wget
+        - yum-utils
+        - iptables-services
+        - bridge-utils
+        - bash-completion
+        - kexec-tools
+        - sos
+        - psacct
+        - lvm2
+    - role: docker-storage-setup
+      docker_storage_volumegroup: dockerVG
+      docker_storage_dev: /dev/vdb
+
+  post_tasks:
+    - name: Set SElinux context 
+      command: setsebool -P virt_use_nfs 1
+    - name: Set SElinux context 
+      command:  setsebool -P virt_sandbox_use_nfs 1
